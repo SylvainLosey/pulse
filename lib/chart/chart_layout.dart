@@ -4,6 +4,7 @@ class ChartLayout {
   final Size size;
   final double margin;
   final double barWidth;
+  final double bottomPadding = 16.0;
 
   late final double usableWidth;
   late final double usableHeight;
@@ -16,7 +17,7 @@ class ChartLayout {
   }) {
     usableWidth = size.width - (margin * 2);
     usableHeight = size.height - (margin * 2);
-    chartHeight = usableHeight * 0.9;
+    chartHeight = usableHeight * 0.9 - bottomPadding;
     print('ChartLayout initialized:');
     print('Size: $size');
     print('Usable size: ${Size(usableWidth, usableHeight)}');

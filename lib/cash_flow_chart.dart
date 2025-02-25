@@ -8,8 +8,13 @@ import 'chart/segment_data.dart';
 
 class CashFlowChart extends StatefulWidget {
   final MonthlyCashFlow cashFlow;
+  final ValueChanged<int>? onMonthChanged;
 
-  const CashFlowChart({super.key, required this.cashFlow});
+  const CashFlowChart({
+    super.key,
+    required this.cashFlow,
+    this.onMonthChanged,
+  });
 
   @override
   State<CashFlowChart> createState() => _CashFlowChartState();
@@ -20,6 +25,24 @@ class _CashFlowChartState extends State<CashFlowChart> {
   Offset? tooltipPosition;
   BarData? incomeBar;
   BarData? expensesBar;
+
+  // Track horizontal drag for month changes
+  double _dragStart = 0;
+  static const double _dragThreshold = 50.0;
+
+  void _handleDragStart(DragStartDetails details) {
+    _dragStart = details.globalPosition.dx;
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    final dragDistance = _dragStart - details.velocity.pixelsPerSecond.dx;
+    if (dragDistance.abs() > _dragThreshold) {
+      // Positive means swipe left (next month), negative means swipe right (previous month)
+      final direction = dragDistance > 0 ? 1 : -1;
+      widget.onMonthChanged?.call(direction);
+    }
+    _dragStart = 0;
+  }
 
   List<Color> _generateColorShades(Color baseColor, int count) {
     if (count <= 1) return [baseColor];
@@ -33,12 +56,12 @@ class _CashFlowChartState extends State<CashFlowChart> {
   }
 
   List<Color> get incomeColors => _generateColorShades(
-        const Color(0xFF4CAF50), // Material Green
+        const Color(0xFF4CAF50),
         widget.cashFlow.income.length,
       );
 
   List<Color> get expenseColors => _generateColorShades(
-        const Color(0xFFF44336), // Material Red
+        const Color(0xFFF44336),
         widget.cashFlow.expenses.length,
       );
 
@@ -70,11 +93,14 @@ class _CashFlowChartState extends State<CashFlowChart> {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
         final layout = ChartLayout(size: size);
 
-        return Stack(
-          children: [
-            GestureDetector(
-              onTapDown: (details) => _handleTap(details.localPosition),
-              child: CustomPaint(
+        return GestureDetector(
+          onTapDown: (details) => _handleTap(details.localPosition),
+          onHorizontalDragStart: _handleDragStart,
+          onHorizontalDragEnd: _handleDragEnd,
+          behavior: HitTestBehavior.translucent,
+          child: Stack(
+            children: [
+              CustomPaint(
                 painter: ChartPainter(
                   income: sortedIncome,
                   expenses: sortedExpenses,
@@ -90,22 +116,22 @@ class _CashFlowChartState extends State<CashFlowChart> {
                 ),
                 size: size,
               ),
-            ),
-            if (selectedCategory != null && tooltipPosition != null)
-              Positioned(
-                left: 0,
-                top: 0,
-                child: ChartTooltip(
-                  category: selectedCategory!,
-                  onTap: () => setState(() {
-                    selectedCategory = null;
-                    tooltipPosition = null;
-                  }),
-                  constraints: constraints,
-                  position: tooltipPosition!,
+              if (selectedCategory != null && tooltipPosition != null)
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: ChartTooltip(
+                    category: selectedCategory!,
+                    onTap: () => setState(() {
+                      selectedCategory = null;
+                      tooltipPosition = null;
+                    }),
+                    constraints: constraints,
+                    position: tooltipPosition!,
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         );
       },
     );
