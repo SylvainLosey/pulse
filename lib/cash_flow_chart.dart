@@ -4,6 +4,7 @@ import 'chart/chart_layout.dart';
 import 'chart/chart_painter.dart';
 import 'chart/chart_hit_detector.dart';
 import 'chart/chart_tooltip.dart';
+import 'chart/segment_data.dart';
 
 class CashFlowChart extends StatefulWidget {
   final MonthlyCashFlow cashFlow;
@@ -17,6 +18,8 @@ class CashFlowChart extends StatefulWidget {
 class _CashFlowChartState extends State<CashFlowChart> {
   CategoryAmount? selectedCategory;
   Offset? tooltipPosition;
+  BarData? incomeBar;
+  BarData? expensesBar;
 
   List<Color> _generateColorShades(Color baseColor, int count) {
     if (count <= 1) return [baseColor];
@@ -39,9 +42,12 @@ class _CashFlowChartState extends State<CashFlowChart> {
         widget.cashFlow.expenses.length,
       );
 
-  void _handleTap(Offset position, ChartHitDetector detector) {
-    final hit = detector.detectHit(position);
+  void _handleTap(Offset position) {
     setState(() {
+      final incomeHit = incomeBar?.hitTest(position);
+      final expensesHit = expensesBar?.hitTest(position);
+
+      final hit = incomeHit ?? expensesHit;
       if (hit != null) {
         selectedCategory = hit.category;
         tooltipPosition = Offset(position.dx, position.dy - 8);
@@ -54,7 +60,6 @@ class _CashFlowChartState extends State<CashFlowChart> {
 
   @override
   Widget build(BuildContext context) {
-    // Sort the income and expenses lists by amount in ascending order
     final sortedIncome = List<CategoryAmount>.from(widget.cashFlow.income)
       ..sort((a, b) => a.amount.compareTo(b.amount));
     final sortedExpenses = List<CategoryAmount>.from(widget.cashFlow.expenses)
@@ -64,18 +69,11 @@ class _CashFlowChartState extends State<CashFlowChart> {
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
         final layout = ChartLayout(size: size);
-        final detector = ChartHitDetector(
-          layout: layout,
-          cashFlow: widget.cashFlow,
-        );
 
         return Stack(
           children: [
             GestureDetector(
-              onTapDown: (details) => _handleTap(
-                details.localPosition,
-                detector,
-              ),
+              onTapDown: (details) => _handleTap(details.localPosition),
               child: CustomPaint(
                 painter: ChartPainter(
                   income: sortedIncome,
@@ -85,6 +83,10 @@ class _CashFlowChartState extends State<CashFlowChart> {
                   greenShades: incomeColors,
                   redShades: expenseColors,
                   layout: layout,
+                  onBarsCreated: (income, expenses) {
+                    incomeBar = income;
+                    expensesBar = expenses;
+                  },
                 ),
                 size: Size.infinite,
               ),

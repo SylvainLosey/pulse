@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models.dart';
 import 'segment_data.dart';
 import 'chart_layout.dart';
+import 'segment_geometry.dart';
 
 class ChartPainter extends CustomPainter {
   final List<CategoryAmount> income;
@@ -11,8 +12,7 @@ class ChartPainter extends CustomPainter {
   final List<Color> greenShades;
   final List<Color> redShades;
   final ChartLayout layout;
-
-  late final List<ChartSegment> _segments;
+  final Function(BarData income, BarData expenses) onBarsCreated;
 
   ChartPainter({
     required this.income,
@@ -22,9 +22,8 @@ class ChartPainter extends CustomPainter {
     required this.greenShades,
     required this.redShades,
     required this.layout,
-  }) {
-    _segments = [];
-  }
+    required this.onBarsCreated,
+  });
 
   void _drawGrid(Canvas canvas, double maxAmount) {
     final paint = Paint()
@@ -67,80 +66,97 @@ class ChartPainter extends CustomPainter {
     }
   }
 
-  void _drawBar(
-    Canvas canvas,
-    Rect barRect,
-    List<CategoryAmount> items,
-    double total,
-    double maxAmount,
-    List<Color> colors,
-  ) {
-    double currentHeight = barRect.height; // Start from the top
+  BarData _createAndDrawBar({
+    required Canvas canvas,
+    required List<CategoryAmount> items,
+    required double x,
+    required double total,
+    required double maxAmount,
+    required List<Color> colors,
+    required bool isIncome,
+    required String label,
+  }) {
+    final barRect = layout.getBarRect(x);
     final segmentPadding = 4.0;
     final totalPadding = (items.length - 1) * segmentPadding;
     final adjustedHeight = barRect.height - totalPadding;
+    final segments = <ChartSegment>[];
 
-    // Draw segments from bottom to top
-    for (int i = items.length - 1; i >= 0; i--) {
+    double currentY = barRect.bottom;
+
+    for (int i = 0; i < items.length; i++) {
       final item = items[i];
       final segmentHeight = (item.amount / maxAmount) * adjustedHeight;
-      final yOffset = (items.length - 1 - i) * segmentPadding;
+      final yOffset = i * segmentPadding;
 
-      currentHeight -= segmentHeight;
-
-      final segmentRect = Rect.fromLTWH(
+      final bounds = Rect.fromLTWH(
         barRect.left,
-        currentHeight - yOffset,
+        currentY - segmentHeight - yOffset,
         barRect.width,
         segmentHeight,
       );
 
-      final rrect = RRect.fromRectAndRadius(
-        segmentRect,
-        Radius.circular(8),
+      final geometry = ChartSegmentGeometry.withMargin(
+        bounds: bounds,
+        margin: layout.margin,
+        borderRadius: 8,
       );
 
-      // Store the segment with its RRect for precise hit testing
       final segment = ChartSegment(
-        bounds: segmentRect,
         category: item,
-        color: colors[i % colors.length],
-        roundedBounds: rrect,
+        color: colors[i],
+        geometry: geometry,
       );
-      _segments.add(segment);
 
-      // Draw the segment
-      canvas.drawRRect(
-        rrect,
-        Paint()..color = colors[i % colors.length],
-      );
+      segments.add(segment);
+      segment.draw(canvas);
 
       // Draw the text
-      final textStyle = TextStyle(
-        color: Colors.white,
-        fontSize: segmentHeight < 60 ? 12 : 14,
-        fontWeight: FontWeight.bold,
-      );
-
-      final textSpan = TextSpan(
+      _drawSegmentLabel(
+        canvas: canvas,
         text: item.category,
-        style: textStyle,
+        bounds: bounds,
+        height: segmentHeight,
       );
-      final textPainter = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
-        textAlign: TextAlign.center,
-      );
-      textPainter.layout(maxWidth: barRect.width - 16);
 
-      textPainter.paint(
-        canvas,
-        Offset(
-          segmentRect.left + (segmentRect.width - textPainter.width) / 2,
-          segmentRect.center.dy - textPainter.height / 2,
-        ),
-      );
+      currentY -= segmentHeight + segmentPadding;
     }
+
+    return BarData(
+      segments: segments,
+      x: x + layout.margin,
+      width: barRect.width,
+      label: label,
+      isIncome: isIncome,
+    );
+  }
+
+  void _drawSegmentLabel({
+    required Canvas canvas,
+    required String text,
+    required Rect bounds,
+    required double height,
+  }) {
+    final textStyle = TextStyle(
+      color: Colors.white,
+      fontSize: height < 60 ? 12 : 14,
+      fontWeight: FontWeight.bold,
+    );
+
+    final textPainter = TextPainter(
+      text: TextSpan(text: text, style: textStyle),
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+    textPainter.layout(maxWidth: bounds.width - 16);
+
+    textPainter.paint(
+      canvas,
+      Offset(
+        bounds.left + (bounds.width - textPainter.width) / 2,
+        bounds.top + (bounds.height - textPainter.height) / 2,
+      ),
+    );
   }
 
   void _drawLabels(Canvas canvas) {
@@ -181,32 +197,37 @@ class ChartPainter extends CustomPainter {
     canvas.translate(layout.margin, layout.margin);
 
     _drawGrid(canvas, maxAmount);
-    _drawBars(canvas, maxAmount);
+
+    final incomeBar = _createAndDrawBar(
+      canvas: canvas,
+      items: income,
+      x: layout.incomeX,
+      total: totalIncome,
+      maxAmount: maxAmount,
+      colors: greenShades,
+      isIncome: true,
+      label: 'Income',
+    );
+
+    final expensesBar = _createAndDrawBar(
+      canvas: canvas,
+      items: expenses,
+      x: layout.expensesX,
+      total: totalExpenses,
+      maxAmount: maxAmount,
+      colors: redShades,
+      isIncome: false,
+      label: 'Expenses',
+    );
+
     _drawLabels(canvas);
 
     canvas.restore();
-  }
 
-  void _drawBars(Canvas canvas, double maxAmount) {
-    _drawBar(
-      canvas,
-      layout.getBarRect(layout.incomeX),
-      income,
-      totalIncome,
-      maxAmount,
-      greenShades,
-    );
-
-    _drawBar(
-      canvas,
-      layout.getBarRect(layout.expensesX),
-      expenses,
-      totalExpenses,
-      maxAmount,
-      redShades,
-    );
+    // Notify the widget of the created bars
+    onBarsCreated(incomeBar, expensesBar);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(ChartPainter oldDelegate) => true;
 }
