@@ -26,22 +26,20 @@ class _CashFlowChartState extends State<CashFlowChart> {
   BarData? incomeBar;
   BarData? expensesBar;
 
-  // Track horizontal drag for month changes
-  double _dragStart = 0;
-  static const double _dragThreshold = 50.0;
+  static const double _minSwipeDistance = 50.0;
+  double _dragStartX = 0;
 
   void _handleDragStart(DragStartDetails details) {
-    _dragStart = details.globalPosition.dx;
+    _dragStartX = details.globalPosition.dx;
   }
 
   void _handleDragEnd(DragEndDetails details) {
-    final dragDistance = _dragStart - details.velocity.pixelsPerSecond.dx;
-    if (dragDistance.abs() > _dragThreshold) {
-      // Positive means swipe left (next month), negative means swipe right (previous month)
+    final dragDistance = details.globalPosition.dx - _dragStartX;
+    if (dragDistance.abs() > _minSwipeDistance) {
+      // Swipe left = previous month (positive), right = next month (negative)
       final direction = dragDistance > 0 ? 1 : -1;
       widget.onMonthChanged?.call(direction);
     }
-    _dragStart = 0;
   }
 
   List<Color> _generateColorShades(Color baseColor, int count) {

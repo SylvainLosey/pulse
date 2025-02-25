@@ -91,6 +91,24 @@ class _HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<_HomeScreen> {
   int currentIndex = 0;
+  final PageController _pageController = PageController();
+
+  void _handleMonthChange(int direction) {
+    final newIndex = currentIndex + direction;
+    if (newIndex >= 0 && newIndex < widget.cashFlows.length) {
+      _pageController.animateToPage(
+        newIndex,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +119,7 @@ class _HomeScreenState extends State<_HomeScreen> {
           children: [
             Expanded(
               child: PageView.builder(
+                controller: _pageController,
                 reverse: true,
                 itemCount: widget.cashFlows.length,
                 onPageChanged: (index) {
@@ -109,7 +128,10 @@ class _HomeScreenState extends State<_HomeScreen> {
                   });
                 },
                 itemBuilder: (context, index) {
-                  return CashFlowChart(cashFlow: widget.cashFlows[index]);
+                  return CashFlowChart(
+                    cashFlow: widget.cashFlows[index],
+                    onMonthChanged: _handleMonthChange,
+                  );
                 },
               ),
             ),
