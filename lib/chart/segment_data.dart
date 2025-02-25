@@ -7,7 +7,7 @@ class ChartSegment {
   final Color color;
   final ChartSegmentGeometry geometry;
 
-  const ChartSegment({
+  ChartSegment({
     required this.category,
     required this.color,
     required this.geometry,

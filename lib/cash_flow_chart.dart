@@ -25,10 +25,10 @@ class _CashFlowChartState extends State<CashFlowChart> {
     if (count <= 1) return [baseColor];
 
     final hslColor = HSLColor.fromColor(baseColor);
-    final lightnessStep = (0.7 - 0.3) / (count - 1);
+    final lightnessStep = 0.3 / (count - 1);
 
     return List.generate(count, (index) {
-      return hslColor.withLightness(0.3 + (lightnessStep * index)).toColor();
+      return hslColor.withLightness(0.65 - (lightnessStep * index)).toColor();
     });
   }
 
@@ -61,9 +61,9 @@ class _CashFlowChartState extends State<CashFlowChart> {
   @override
   Widget build(BuildContext context) {
     final sortedIncome = List<CategoryAmount>.from(widget.cashFlow.income)
-      ..sort((a, b) => a.amount.compareTo(b.amount));
+      ..sort((a, b) => b.amount.compareTo(a.amount));
     final sortedExpenses = List<CategoryAmount>.from(widget.cashFlow.expenses)
-      ..sort((a, b) => a.amount.compareTo(b.amount));
+      ..sort((a, b) => b.amount.compareTo(a.amount));
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -88,19 +88,21 @@ class _CashFlowChartState extends State<CashFlowChart> {
                     expensesBar = expenses;
                   },
                 ),
-                size: Size.infinite,
+                size: size,
               ),
             ),
             if (selectedCategory != null && tooltipPosition != null)
               Positioned(
-                left: tooltipPosition!.dx,
-                top: tooltipPosition!.dy,
+                left: 0,
+                top: 0,
                 child: ChartTooltip(
                   category: selectedCategory!,
                   onTap: () => setState(() {
                     selectedCategory = null;
                     tooltipPosition = null;
                   }),
+                  constraints: constraints,
+                  position: tooltipPosition!,
                 ),
               ),
           ],

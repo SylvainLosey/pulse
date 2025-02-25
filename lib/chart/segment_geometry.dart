@@ -6,7 +6,7 @@ class ChartSegmentGeometry {
   final RRect drawRRect;
   final RRect hitRRect;
 
-  const ChartSegmentGeometry({
+  ChartSegmentGeometry({
     required this.drawBounds,
     required this.hitBounds,
     required double borderRadius,
