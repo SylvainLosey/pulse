@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'cash_flow_chart.dart';
 import 'models.dart';
+import 'month_scale.dart';
 
 void main() {
   runApp(const MyApp());
@@ -74,14 +75,49 @@ class MyApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Monthly Cash Flow (CHF)')),
-        body: PageView.builder(
-          reverse: true,
-          itemCount: cashFlows.length,
-          itemBuilder: (context, index) {
-            return CashFlowChart(cashFlow: cashFlows[index]);
-          },
+      home: _HomeScreen(cashFlows: cashFlows),
+    );
+  }
+}
+
+class _HomeScreen extends StatefulWidget {
+  final List<MonthlyCashFlow> cashFlows;
+
+  const _HomeScreen({required this.cashFlows});
+
+  @override
+  State<_HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<_HomeScreen> {
+  int currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView.builder(
+                reverse: true,
+                itemCount: widget.cashFlows.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    currentIndex = index;
+                  });
+                },
+                itemBuilder: (context, index) {
+                  return CashFlowChart(cashFlow: widget.cashFlows[index]);
+                },
+              ),
+            ),
+            MonthScale(
+              cashFlows: widget.cashFlows,
+              currentIndex: currentIndex,
+            ),
+          ],
         ),
       ),
     );

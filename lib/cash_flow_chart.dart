@@ -60,63 +60,50 @@ class _CashFlowChartState extends State<CashFlowChart> {
     final sortedExpenses = List<CategoryAmount>.from(widget.cashFlow.expenses)
       ..sort((a, b) => a.amount.compareTo(b.amount));
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            widget.cashFlow.month,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final size = Size(constraints.maxWidth, constraints.maxHeight);
-              final layout = ChartLayout(size: size);
-              final detector = ChartHitDetector(
-                layout: layout,
-                cashFlow: widget.cashFlow,
-              );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        final layout = ChartLayout(size: size);
+        final detector = ChartHitDetector(
+          layout: layout,
+          cashFlow: widget.cashFlow,
+        );
 
-              return Stack(
-                children: [
-                  GestureDetector(
-                    onTapDown: (details) => _handleTap(
-                      details.localPosition,
-                      detector,
-                    ),
-                    child: CustomPaint(
-                      painter: ChartPainter(
-                        income: sortedIncome,
-                        expenses: sortedExpenses,
-                        totalIncome: widget.cashFlow.totalIncome,
-                        totalExpenses: widget.cashFlow.totalExpenses,
-                        greenShades: incomeColors,
-                        redShades: expenseColors,
-                        layout: layout,
-                      ),
-                      size: Size.infinite,
-                    ),
-                  ),
-                  if (selectedCategory != null && tooltipPosition != null)
-                    Positioned(
-                      left: tooltipPosition!.dx,
-                      top: tooltipPosition!.dy,
-                      child: ChartTooltip(
-                        category: selectedCategory!,
-                        onTap: () => setState(() {
-                          selectedCategory = null;
-                          tooltipPosition = null;
-                        }),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
+        return Stack(
+          children: [
+            GestureDetector(
+              onTapDown: (details) => _handleTap(
+                details.localPosition,
+                detector,
+              ),
+              child: CustomPaint(
+                painter: ChartPainter(
+                  income: sortedIncome,
+                  expenses: sortedExpenses,
+                  totalIncome: widget.cashFlow.totalIncome,
+                  totalExpenses: widget.cashFlow.totalExpenses,
+                  greenShades: incomeColors,
+                  redShades: expenseColors,
+                  layout: layout,
+                ),
+                size: Size.infinite,
+              ),
+            ),
+            if (selectedCategory != null && tooltipPosition != null)
+              Positioned(
+                left: tooltipPosition!.dx,
+                top: tooltipPosition!.dy,
+                child: ChartTooltip(
+                  category: selectedCategory!,
+                  onTap: () => setState(() {
+                    selectedCategory = null;
+                    tooltipPosition = null;
+                  }),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
