@@ -5,8 +5,12 @@
 .packages
 .pub-cache/
 .pub/
-build/
+# /build/
 *.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
 
 # Android specific
 android/app/debug
@@ -32,3 +36,16 @@ ios/.generated/
 *.iml
 *.iws
 .DS_Store
+
+# Instead use these more specific ignores
+/build/app/
+/build/ios/
+/build/android/
+/build/linux/
+/build/windows/
+/build/macos/
+# Don't ignore web builds for GitHub Pages
+!/build/web/
+
+# Web related
+lib/generated_plugin_registrant.dart
