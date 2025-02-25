@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
 import 'models.dart';
-import 'chart/segment_data.dart';
 import 'chart/chart_layout.dart';
 import 'chart/chart_painter.dart';
 import 'chart/chart_hit_detector.dart';
@@ -20,19 +18,26 @@ class _CashFlowChartState extends State<CashFlowChart> {
   CategoryAmount? selectedCategory;
   Offset? tooltipPosition;
 
-  static const greenShades = [
-    Color(0xFF81C784),
-    Color(0xFF4CAF50),
-    Color(0xFF388E3C),
-    Color(0xFF1B5E20),
-  ];
+  List<Color> _generateColorShades(Color baseColor, int count) {
+    if (count <= 1) return [baseColor];
 
-  static const redShades = [
-    Color(0xFFE57373),
-    Color(0xFFF44336),
-    Color(0xFFD32F2F),
-    Color(0xFFB71C1C),
-  ];
+    final hslColor = HSLColor.fromColor(baseColor);
+    final lightnessStep = (0.7 - 0.3) / (count - 1);
+
+    return List.generate(count, (index) {
+      return hslColor.withLightness(0.3 + (lightnessStep * index)).toColor();
+    });
+  }
+
+  List<Color> get incomeColors => _generateColorShades(
+        const Color(0xFF4CAF50), // Material Green
+        widget.cashFlow.income.length,
+      );
+
+  List<Color> get expenseColors => _generateColorShades(
+        const Color(0xFFF44336), // Material Red
+        widget.cashFlow.expenses.length,
+      );
 
   void _handleTap(Offset position, ChartHitDetector detector) {
     final hit = detector.detectHit(position);
@@ -49,6 +54,12 @@ class _CashFlowChartState extends State<CashFlowChart> {
 
   @override
   Widget build(BuildContext context) {
+    // Sort the income and expenses lists by amount in ascending order
+    final sortedIncome = List<CategoryAmount>.from(widget.cashFlow.income)
+      ..sort((a, b) => a.amount.compareTo(b.amount));
+    final sortedExpenses = List<CategoryAmount>.from(widget.cashFlow.expenses)
+      ..sort((a, b) => a.amount.compareTo(b.amount));
+
     return Column(
       children: [
         Padding(
@@ -77,12 +88,12 @@ class _CashFlowChartState extends State<CashFlowChart> {
                     ),
                     child: CustomPaint(
                       painter: ChartPainter(
-                        income: widget.cashFlow.income,
-                        expenses: widget.cashFlow.expenses,
+                        income: sortedIncome,
+                        expenses: sortedExpenses,
                         totalIncome: widget.cashFlow.totalIncome,
                         totalExpenses: widget.cashFlow.totalExpenses,
-                        greenShades: greenShades,
-                        redShades: redShades,
+                        greenShades: incomeColors,
+                        redShades: expenseColors,
                         layout: layout,
                       ),
                       size: Size.infinite,

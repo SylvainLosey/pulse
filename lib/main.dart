@@ -11,28 +11,78 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cashFlow = MonthlyCashFlow(
-      month: 'October 2023',
-      income: [
-        CategoryAmount(category: 'Salary', amount: 6500),
-        CategoryAmount(category: 'Side Project', amount: 400),
-        CategoryAmount(category: 'Investments', amount: 300),
-      ],
-      expenses: [
-        CategoryAmount(category: 'Rent', amount: 2200),
-        CategoryAmount(category: 'Groceries', amount: 800),
-        CategoryAmount(category: 'Health Insurance', amount: 480),
-        CategoryAmount(category: 'Transport', amount: 250),
-        CategoryAmount(category: 'Restaurants', amount: 400),
-        CategoryAmount(category: 'Entertainment', amount: 300),
-        CategoryAmount(category: 'Internet & Phone', amount: 120),
-      ],
-    );
+    final cashFlows = [
+      MonthlyCashFlow(
+        month: 'February 2025',
+        income: [
+          CategoryAmount(category: 'Salary', amount: 7200),
+          CategoryAmount(category: 'Side Project', amount: 500),
+          CategoryAmount(category: 'Investments', amount: 350),
+        ],
+        expenses: [
+          CategoryAmount(category: 'Rent', amount: 2400),
+          CategoryAmount(category: 'Groceries', amount: 900),
+          CategoryAmount(category: 'Health Insurance', amount: 420),
+          CategoryAmount(category: 'Transport', amount: 280),
+          CategoryAmount(category: 'Restaurants', amount: 450),
+          CategoryAmount(category: 'Entertainment', amount: 350),
+          CategoryAmount(category: 'Internet & Phone', amount: 140),
+        ],
+      ),
+      MonthlyCashFlow(
+        month: 'January 2025',
+        income: [
+          CategoryAmount(category: 'Salary', amount: 7200),
+          CategoryAmount(category: 'Side Project', amount: 450),
+          CategoryAmount(category: 'Investments', amount: 320),
+        ],
+        expenses: [
+          CategoryAmount(category: 'Rent', amount: 2400),
+          CategoryAmount(category: 'Groceries', amount: 880),
+          CategoryAmount(category: 'Health Insurance', amount: 420),
+          CategoryAmount(category: 'Transport', amount: 270),
+          CategoryAmount(category: 'Restaurants', amount: 420),
+          CategoryAmount(category: 'Entertainment', amount: 380),
+          CategoryAmount(category: 'Internet & Phone', amount: 140),
+        ],
+      ),
+      MonthlyCashFlow(
+        month: 'December 2024',
+        income: [
+          CategoryAmount(category: 'Salary', amount: 7100),
+          CategoryAmount(category: 'Side Project', amount: 600),
+          CategoryAmount(category: 'Investments', amount: 300),
+        ],
+        expenses: [
+          CategoryAmount(category: 'Rent', amount: 2400),
+          CategoryAmount(category: 'Groceries', amount: 950),
+          CategoryAmount(category: 'Health Insurance', amount: 420),
+          CategoryAmount(category: 'Transport', amount: 260),
+          CategoryAmount(category: 'Restaurants', amount: 500),
+          CategoryAmount(category: 'Entertainment', amount: 400),
+          CategoryAmount(category: 'Internet & Phone', amount: 140),
+        ],
+      ),
+    ];
 
     return MaterialApp(
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF1A1F2B),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1A1F2B),
+          elevation: 0,
+        ),
+      ),
       home: Scaffold(
-        appBar: AppBar(title: const Text('Monthly Cash Flow')),
-        body: CashFlowChart(cashFlow: cashFlow),
+        appBar: AppBar(title: const Text('Monthly Cash Flow (CHF)')),
+        body: PageView.builder(
+          reverse: true,
+          itemCount: cashFlows.length,
+          itemBuilder: (context, index) {
+            return CashFlowChart(cashFlow: cashFlows[index]);
+          },
+        ),
       ),
     );
   }

@@ -28,25 +28,31 @@ class ChartPainter extends CustomPainter {
 
   void _drawGrid(Canvas canvas, double maxAmount) {
     final paint = Paint()
-      ..color = Colors.grey.withOpacity(0.2)
+      ..color = Colors.white.withOpacity(0.1)
       ..strokeWidth = 1;
 
     final textStyle = TextStyle(
-      color: Colors.grey[600],
-      fontSize: 12,
+      color: Colors.grey[400],
+      fontSize: 14,
     );
+
+    final axisLabelMargin = 60.0;
 
     for (int i = 0; i <= 5; i++) {
       final y = layout.chartHeight * (1 - i / 5);
       canvas.drawLine(
-        Offset(40, y),
+        Offset(axisLabelMargin, y),
         Offset(layout.usableWidth - 40, y),
         paint,
       );
 
-      final amount = (maxAmount * i / 5).toInt();
+      final amount = (maxAmount * i / 5);
+      final formattedAmount = amount >= 1000
+          ? '${(amount / 1000).toStringAsFixed(1)}k'
+          : amount.toInt().toString();
+
       final textSpan = TextSpan(
-        text: '\$${amount}',
+        text: formattedAmount,
         style: textStyle,
       );
       final textPainter = TextPainter(
@@ -54,7 +60,10 @@ class ChartPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
-      textPainter.paint(canvas, Offset(0, y - textPainter.height / 2));
+      textPainter.paint(
+        canvas,
+        Offset(4, y - textPainter.height / 2),
+      );
     }
   }
 
@@ -136,8 +145,8 @@ class ChartPainter extends CustomPainter {
 
   void _drawLabels(Canvas canvas) {
     final textStyle = TextStyle(
-      color: Colors.black,
-      fontSize: 16,
+      color: Colors.white,
+      fontSize: 18,
       fontWeight: FontWeight.bold,
     );
 
